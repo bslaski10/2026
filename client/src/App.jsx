@@ -63,12 +63,13 @@ function parseYearMonth(dateStr) {
 function App() {
   const [activePage, setActivePage] = useState("daily"); // "daily" | "monthly" | "totals"
 
+  // Default selectedDate to today's real date (YYYY-MM-DD)
   const [selectedDate, setSelectedDate] = useState(() => {
     const today = new Date();
-    const year = 2026; // force year to 2026 for your challenge
+    const y = today.getFullYear();
     const m = String(today.getMonth() + 1).padStart(2, "0");
     const d = String(today.getDate()).padStart(2, "0");
-    return `${year}-${m}-${d}`;
+    return `${y}-${m}-${d}`;
   });
 
   const [dailyStats, setDailyStats] = useState(null);
@@ -100,16 +101,17 @@ function App() {
     loadDaily();
   }, [selectedDate]);
 
-  // --- Load YEARLY totals on mount and after changes ---
+  // --- Load YEARLY totals whenever the selected year changes ---
   useEffect(() => {
     refreshTotals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [selectedDate]);
 
   async function refreshTotals() {
     setLoadingTotals(true);
     try {
-      const data = await getYearTotals(2026);
+      const year = new Date(selectedDate).getFullYear();
+      const data = await getYearTotals(year);
       setTotals(data);
       setError("");
     } catch (err) {
@@ -175,16 +177,18 @@ function App() {
     }
   }
 
+  const currentYear = new Date(selectedDate).getFullYear();
+
   const title =
     activePage === "daily"
-      ? "2026 Daily"
+      ? `${currentYear} Daily Challenge`
       : activePage === "monthly"
-      ? "2026 Monthly"
-      : "2026 Totals";
+      ? `${currentYear} Monthly Stats`
+      : `${currentYear} Total Stats`;
 
   const subtitle =
     activePage === "daily"
-      ? "Update today’s rings"
+      ? "Made by Brooks Slaski"
       : activePage === "monthly"
       ? "See this month’s progress"
       : "See progress towards yearly goals";
@@ -330,7 +334,6 @@ function StatsGrid({
   );
 }
 
-
 // Single ring card
 function ProgressRing({ label, percent, valueText, onAddClick }) {
   const radius = 42;
@@ -354,19 +357,18 @@ function ProgressRing({ label, percent, valueText, onAddClick }) {
             cy={radius}
           />
           <circle
-  className="ring-progress"
-  fill="transparent"
-  strokeWidth={stroke}
-  strokeLinecap="round"
-  r={normalizedRadius}
-  cx={radius}
-  cy={radius}
-  style={{
-    strokeDasharray: `${circumference} ${circumference}`,
-    strokeDashoffset,
-  }}
-/>
-
+            className="ring-progress"
+            fill="transparent"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            r={normalizedRadius}
+            cx={radius}
+            cy={radius}
+            style={{
+              strokeDasharray: `${circumference} ${circumference}`,
+              strokeDashoffset,
+            }}
+          />
         </svg>
         <div className="ring-center">
           <div className="ring-value">{valueText}</div>

@@ -108,19 +108,20 @@ function App() {
   }, [selectedDate]);
 
   async function refreshTotals() {
-    setLoadingTotals(true);
-    try {
-      const year = new Date(selectedDate).getFullYear();
-      const data = await getYearTotals(year);
-      setTotals(data);
-      setError("");
-    } catch (err) {
-      console.error(err);
-      setError("Could not load yearly totals.");
-    } finally {
-      setLoadingTotals(false);
-    }
+  setLoadingTotals(true);
+  try {
+    const { year } = parseYearMonth(selectedDate);
+    const data = await getYearTotals(year);
+    setTotals(data);
+    setError("");
+  } catch (err) {
+    console.error(err);
+    setError("Could not load yearly totals.");
+  } finally {
+    setLoadingTotals(false);
   }
+}
+
 
   // --- Load MONTHLY totals whenever date changes (month) or after changes ---
   useEffect(() => {
@@ -177,7 +178,7 @@ function App() {
     }
   }
 
-  const currentYear = new Date(selectedDate).getFullYear();
+  const { year: currentYear } = parseYearMonth(selectedDate);
 
   const title =
     activePage === "daily"

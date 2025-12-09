@@ -261,13 +261,36 @@ function App() {
 
 // 2x3 grid for all modes
 function StatsGrid({
-  mode, // "daily" | "monthly" | "totals"
+  mode,
   metrics,
   dailyStats,
   totals,
   monthlyTotals,
   onIncrementMetric,
 }) {
+  // SPECIAL CASE: totals page should NOT show rings, just raw totals
+  if (mode === "totals") {
+    return (
+      <div className="stats-grid">
+        {metrics.map((metric) => {
+          const rawValue = Number(totals?.[metric.key] || 0);
+
+          return (
+            <div className="total-card" key={metric.key}>
+              <div className="total-label">{metric.label}</div>
+              <div className="total-value">
+                {rawValue.toLocaleString(undefined, {
+                  maximumFractionDigits: 1,
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // DAILY + MONTHLY still use rings
   return (
     <div className="stats-grid">
       {metrics.map((metric) => {
@@ -280,10 +303,6 @@ function StatsGrid({
         } else if (mode === "monthly") {
           rawValue = Number(monthlyTotals?.[metric.key] || 0);
           target = getMonthlyTarget(metric);
-        } else {
-          // totals / yearly
-          rawValue = Number(totals?.[metric.key] || 0);
-          target = metric.yearlyTarget;
         }
 
         const percent = target > 0 ? Math.min(rawValue / target, 1) : 0;
@@ -293,8 +312,6 @@ function StatsGrid({
           valueText = `${Math.round(rawValue)}/${metric.dailyTarget}`;
         } else if (mode === "monthly") {
           valueText = `${Math.round(rawValue)}/${Math.round(target)}`;
-        } else {
-          valueText = `${Math.round(rawValue)}/${metric.yearlyTarget}`;
         }
 
         const showPlus = mode === "daily";
@@ -312,6 +329,7 @@ function StatsGrid({
     </div>
   );
 }
+
 
 // Single ring card
 function ProgressRing({ label, percent, valueText, onAddClick }) {
@@ -336,19 +354,19 @@ function ProgressRing({ label, percent, valueText, onAddClick }) {
             cy={radius}
           />
           <circle
-            className="ring-progress"
-            stroke="#4ade80"
-            fill="transparent"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            r={normalizedRadius}
-            cx={radius}
-            cy={radius}
-            style={{
-              strokeDasharray: `${circumference} ${circumference}`,
-              strokeDashoffset,
-            }}
-          />
+  className="ring-progress"
+  fill="transparent"
+  strokeWidth={stroke}
+  strokeLinecap="round"
+  r={normalizedRadius}
+  cx={radius}
+  cy={radius}
+  style={{
+    strokeDasharray: `${circumference} ${circumference}`,
+    strokeDashoffset,
+  }}
+/>
+
         </svg>
         <div className="ring-center">
           <div className="ring-value">{valueText}</div>
